@@ -185,10 +185,38 @@
     .grid2 .rst button{width:100%}
     .grid3{grid-template-columns:1fr}
   }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* ---------- Pop up status koneksi ---------- */
+  .conn{
+    position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:50;
+    display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);
+    padding:11px 18px;border-radius:99px;font-weight:700;font-size:.9rem;
+    background:var(--card);color:var(--ink);border:1.5px solid var(--line);
+    box-shadow:0 14px 34px -10px rgba(20,30,80,.45);
+    transform:translate(-50%,-140%);opacity:0;pointer-events:none;
+    transition:transform .35s cubic-bezier(.2,.9,.3,1.2),opacity .25s;
+  }
+  .conn.show{transform:translate(-50%,0);opacity:1}
+  .conn .ic{width:18px;height:18px;flex:none;border-radius:50%;position:relative}
+  .conn.connecting .ic,.conn.reconnecting .ic{
+    border:2.5px solid color-mix(in srgb,var(--accent) 25%,transparent);
+    border-top-color:var(--accent);animation:spin .8s linear infinite;
+  }
+  .conn.reconnecting{border-color:var(--no-ink);color:var(--no-ink)}
+  .conn.reconnecting .ic{border-color:color-mix(in srgb,var(--no-ink) 25%,transparent);border-top-color:var(--no-ink)}
+  .conn.connected{border-color:var(--ok-ink);color:var(--ok-ink)}
+  .conn.connected .ic{background:var(--ok)}
+  .conn.connected .ic::after{
+    content:"";position:absolute;left:5.5px;top:2.5px;width:4px;height:8px;
+    border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.conn .ic{animation:none!important}}
 </style>
 </head>
 <body>
+
+<div id="conn" class="conn" role="status" aria-live="polite"><span class="ic" aria-hidden="true"></span><span id="connTxt"></span></div>
 
 <header class="hero">
   <div class="hero-in">
@@ -250,6 +278,23 @@
   var fRuang = "", fTgl = "";                    // filter utama (diterapkan di browser)
   var loading = false, countdown = INTERVAL, lastTime = "", failed = false;
 
+
+  /* ---------- Pop up status koneksi ---------- */
+  var conn = $("conn"), connTxt = $("connTxt"), connTimer = null, retryTimer = null,
+      online = true, RETRY = 5000;
+  var CONN_TEXT = {
+    connecting:   "Sedang tersambung ke server…",
+    connected:    "Tersambung ke server",
+    reconnecting: "Menyambungkan ulang…"
+  };
+  function showConn(state, autoHideMs){
+    clearTimeout(connTimer);
+    conn.className = "conn show " + state;
+    connTxt.textContent = CONN_TEXT[state];
+    if (autoHideMs) connTimer = setTimeout(function(){ conn.classList.remove("show"); }, autoHideMs);
+  }
+  function hideConn(){ clearTimeout(connTimer); conn.classList.remove("show"); }
+
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
@@ -307,7 +352,10 @@
   // silent = true untuk refresh otomatis (tanpa mengosongkan tampilan)
   function load(silent){
     if (loading) return;
+    clearTimeout(retryTimer);
     loading = true; btn.disabled = true;
+    if (!online) showConn("reconnecting");
+    else if (!silent) showConn("connecting");
     if (!silent){ out.innerHTML = ""; bar.hidden = true; setMsg("Memuat data…"); }
     updateBar();
 
@@ -318,16 +366,24 @@
 
     fetch(API_URL + "?" + q.join("&")).then(function(r){ return r.json(); }).then(function(res){
       if (res.status !== "success"){
+        if (!online || !silent) showConn("connected", 2500); else hideConn();
+        online = true;
         if (silent || data){ failed = true; if (!silent) setMsg(res.message || "Gagal memuat data.", true); }
         else setMsg(res.message || "Gagal memuat data.", true);
         return;
       }
+      if (!online || !silent) showConn("connected", 2500); else hideConn();
+      online = true;
       failed = false;
       lastTime = new Date().toLocaleTimeString("id-ID");
       data = res;
       buildFilters();
       render();
     }).catch(function(err){
+      online = false;
+      showConn("reconnecting");
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(function(){ load(true); }, RETRY);   // coba lagi otomatis
       if (silent){ failed = true; }
       else setMsg("Tidak dapat terhubung ke server: " + err.message, true);
     }).then(function(){
@@ -353,6 +409,10 @@
     countdown--;
     if (countdown <= 0) load(true); else updateBar();
   }, 1000);
+
+  // Perangkat kehilangan / mendapatkan internet
+  window.addEventListener("offline", function(){ online = false; showConn("reconnecting"); });
+  window.addEventListener("online", function(){ clearTimeout(retryTimer); load(true); });
 
   auto.addEventListener("change", function(){ countdown = INTERVAL; updateBar(); });
 
