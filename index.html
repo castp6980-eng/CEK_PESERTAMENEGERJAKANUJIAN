@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pantau Pengerjaan Mapel</title>
+<title>Pantau Pengerjaan Ujian</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -59,20 +59,29 @@
 
   .wrap{max-width:960px;margin:-64px auto 0;padding:0 16px 48px;position:relative}
 
-  /* ---------- Form ---------- */
-  form{
+  /* ---------- Kartu filter ---------- */
+  .panel{
     background:var(--card);border:1px solid var(--line);border-radius:20px;
     box-shadow:var(--shadow);padding:18px;
-    display:grid;grid-template-columns:repeat(3,1fr) auto;gap:12px;align-items:end;
   }
+  .panel+.panel{margin-top:12px}
+  .panel .ttl{margin:0 0 12px;font-weight:700;font-size:.92rem}
+  .panel .ttl small{color:var(--muted);font-weight:500;margin-left:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:12px;align-items:end}
+  .hint{margin:12px 0 0;color:var(--muted);font-size:.8rem}
+  .hint:empty{display:none}
+
   label{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:6px}
-  input[type=text],input:not([type]){
+  input[type=text],input:not([type]),select{
     width:100%;font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;
     border:1.5px solid var(--line);background:var(--card-soft);color:var(--ink);
     transition:border-color .15s,box-shadow .15s;
   }
+  select{cursor:pointer}
+  select:disabled{opacity:.6;cursor:not-allowed}
   input::placeholder{color:var(--muted);opacity:.6}
-  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
   button{
     font:inherit;font-weight:700;cursor:pointer;color:#fff;border:0;border-radius:12px;
     padding:13px 26px;background:var(--hero);
@@ -82,7 +91,10 @@
   button:hover{transform:translateY(-1px)}
   button:active{transform:translateY(0)}
   button:disabled{opacity:.6;cursor:wait;transform:none}
-  button:focus-visible,input:focus-visible,.switch input:focus-visible+.track{outline:3px solid var(--accent);outline-offset:2px}
+  button:focus-visible,input:focus-visible,select:focus-visible,.switch input:focus-visible+.track{outline:3px solid var(--accent);outline-offset:2px}
+  button.ghost{
+    background:var(--card-soft);color:var(--ink);border:1.5px solid var(--line);box-shadow:none;padding:11px 20px;
+  }
 
   /* ---------- Status ---------- */
   #msg{margin:18px 4px 0;color:var(--muted);font-size:.95rem}
@@ -146,15 +158,19 @@
   .belum .av{background:var(--no)} .sudah .av{background:var(--ok)}
   .nm{min-width:0}
   .nm b{display:block;font-weight:600;font-size:.92rem;line-height:1.3;overflow-wrap:anywhere}
-  .nm small{color:var(--muted);font-size:.78rem}
+  .nm small{display:block;color:var(--muted);font-size:.78rem;overflow-wrap:anywhere}
   .kosong{color:var(--muted);font-size:.9rem;padding:10px 4px}
+  .kosong.card{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow);padding:18px;margin-top:14px;text-align:center}
 
   /* ---------- Mobile ---------- */
   @media (max-width:760px){
-    form{grid-template-columns:1fr;padding:16px}
-    button{width:100%;padding:14px}
-    .stats{grid-template-columns:1fr 1fr 1fr;gap:8px}
-    .stat{padding:12px 12px}
+    .panel{padding:16px}
+    .grid3{grid-template-columns:1fr 1fr}
+    .grid3 .go{grid-column:1/-1}
+    .grid3 .go button{width:100%;padding:14px}
+    .stats{gap:8px}
+    .stat{padding:12px}
     .stat b{font-size:1.5rem}
     .stat small{font-size:.74rem}
   }
@@ -163,6 +179,12 @@
     .col+.col{border-left:0;border-top:1px solid var(--line)}
     .hero{padding-bottom:88px}
   }
+  @media (max-width:480px){
+    .grid2{grid-template-columns:1fr 1fr}
+    .grid2 .rst{grid-column:1/-1}
+    .grid2 .rst button{width:100%}
+    .grid3{grid-template-columns:1fr}
+  }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -170,23 +192,40 @@
 
 <header class="hero">
   <div class="hero-in">
-    <h1>Pantau pengerjaan ujian</h1>
-    <p>Lihat siapa yang sudah dan belum mengerjakan, dikelompokkan per ruang.</p>
+    <h1>Pantau Pengerjaan Ujian</h1>
+    <p>Lihat siapa yang sudah dan belum mengirim, per ruang dan tanggal pengiriman.</p>
   </div>
 </header>
 
 <main class="wrap">
-  <form id="f">
-    <div><label for="kelas">Kelas</label>
-      <input id="kelas" type="text" required placeholder="mis. 7A" autocomplete="off" autocapitalize="characters"></div>
-    <div><label for="kode">Kode Mapel</label>
-      <input id="kode" type="text" placeholder="mis. IPABAB1" autocomplete="off" autocapitalize="characters"></div>
-    <div><label for="mapel">Mata Pelajaran</label>
-      <input id="mapel" type="text" placeholder="mis. IPA" autocomplete="off" autocapitalize="characters"></div>
-    <div><button id="btn" type="submit">Tampilkan</button></div>
+  <!-- Filter utama -->
+  <section class="panel">
+    <p class="ttl">Filter utama</p>
+    <div class="grid2">
+      <div><label for="fRuang">Ruang</label>
+        <select id="fRuang" disabled><option value="">Semua ruang</option></select></div>
+      <div><label for="fTgl">Tanggal pengiriman</label>
+        <select id="fTgl" disabled><option value="">Semua tanggal</option></select></div>
+      <div class="rst"><button type="button" id="rst" class="ghost">Reset</button></div>
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <!-- Filter tambahan (opsional) -->
+  <form id="f" class="panel">
+    <p class="ttl">Filter tambahan<small>opsional, boleh dikosongkan</small></p>
+    <div class="grid3">
+      <div><label for="kelas">Kelas</label>
+        <input id="kelas" type="text" placeholder="mis. 7A (kosong = semua kelas)" autocomplete="off" autocapitalize="characters"></div>
+      <div><label for="kode">Kode Mapel</label>
+        <input id="kode" type="text" placeholder="mis. IPABAB1" autocomplete="off" autocapitalize="characters"></div>
+      <div><label for="mapel">Mata Pelajaran</label>
+        <input id="mapel" type="text" placeholder="mis. IPA" autocomplete="off" autocapitalize="characters"></div>
+      <div class="go"><button id="btn" type="submit">Terapkan</button></div>
+    </div>
   </form>
 
-  <div id="msg" role="status">Isi kelas, lalu Kode Mapel dan/atau Mata Pelajaran.</div>
+  <div id="msg" role="status">Memuat data…</div>
 
   <div id="bar" class="bar" hidden>
     <span id="stamp"></span>
@@ -201,28 +240,58 @@
   var API_URL = "https://script.google.com/macros/s/AKfycbzOwSWkSqF0PervY6pRhpUzyRYfUfuYv947willFpAcgAqc7aJyCYE8HDKOI4mpY3Eypw/exec";
   var INTERVAL = 30; // detik
 
-  var f = document.getElementById("f"), btn = document.getElementById("btn"),
-      msg = document.getElementById("msg"), out = document.getElementById("out"),
-      bar = document.getElementById("bar"), stamp = document.getElementById("stamp"),
-      auto = document.getElementById("auto");
+  var $ = function(id){ return document.getElementById(id); };
+  var f = $("f"), btn = $("btn"), msg = $("msg"), out = $("out"),
+      bar = $("bar"), stamp = $("stamp"), auto = $("auto"),
+      selRuang = $("fRuang"), selTgl = $("fTgl"), rst = $("rst"), hint = $("hint");
 
-  var current = null;   // parameter pencarian terakhir
-  var loading = false;
-  var countdown = INTERVAL;
-  var lastTime = "";
-  var failed = false;
+  var current = {kelas:"", kode:"", mapel:""};   // filter tambahan (dikirim ke server)
+  var data = null;                               // hasil terakhir dari server
+  var fRuang = "", fTgl = "";                    // filter utama (diterapkan di browser)
+  var loading = false, countdown = INTERVAL, lastTime = "", failed = false;
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
   function setMsg(t, isErr){ msg.textContent = t; msg.className = isErr ? "err" : ""; }
 
-  function list(items){
+  // "2026-11-22" -> "22 November 2026"
+  function fmtTgl(iso){
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!m) return iso;
+    return new Date(+m[1], +m[2]-1, +m[3]).toLocaleDateString("id-ID",
+      {day:"numeric", month:"long", year:"numeric"});
+  }
+
+  // Teks pengiriman: "IPA · 22 November 2026, 08:15" (maks 3, sisanya "+n lainnya")
+  function waktuText(entries){
+    var parts = entries.slice(0, 3).map(function(d){
+      var t = [d.tanggal ? fmtTgl(d.tanggal) : "", d.jam].filter(Boolean).join(", ");
+      var mp = d.mapel || d.kodeMapel;
+      return [mp, t].filter(Boolean).join(" · ");
+    }).filter(Boolean);
+    if (entries.length > 3) parts.push("+" + (entries.length - 3) + " lainnya");
+    return parts;
+  }
+
+  // list(items, info, mode): mode "sudah" -> tampilkan waktu kirim; "belum" -> catatan bila kirim di tanggal lain
+  function list(items, info, mode){
     if (!items.length) return '<div class="kosong">Tidak ada</div>';
     return "<ul>" + items.map(function(p){
       var ini = (p.nama.trim().charAt(0) || "?").toUpperCase();
+      var sub = '<small>' + esc(p.noPeserta) + (p.kelas ? ' · ' + esc(p.kelas) : '') + '</small>';
+      var ent = info[p.noPeserta] || [];
+      if (mode === "sudah"){
+        var shown = fTgl ? ent.filter(function(d){ return d.tanggal === fTgl; }) : ent;
+        waktuText(shown).forEach(function(t){ sub += '<small>' + esc(t) + '</small>'; });
+      } else if (fTgl && ent.length){
+        var tg = {};
+        ent.forEach(function(d){ if (d.tanggal) tg[d.tanggal] = true; });
+        var ks = Object.keys(tg).sort().map(fmtTgl).join(", ");
+        if (ks) sub += '<small>Mengirim di tanggal lain: ' + esc(ks) + '</small>';
+      }
       return '<li><span class="av" aria-hidden="true">' + esc(ini) + '</span>' +
-        '<span class="nm"><b>' + esc(p.nama) + '</b><small>' + esc(p.noPeserta) + '</small></span></li>';
+        '<span class="nm"><b>' + esc(p.nama) + '</b>' + sub + '</span></li>';
     }).join("") + "</ul>";
   }
 
@@ -237,91 +306,156 @@
 
   // silent = true untuk refresh otomatis (tanpa mengosongkan tampilan)
   function load(silent){
-    if (!current || loading) return;
+    if (loading) return;
     loading = true; btn.disabled = true;
     if (!silent){ out.innerHTML = ""; bar.hidden = true; setMsg("Memuat data…"); }
     updateBar();
 
-    var url = API_URL + "?action=absensi&kelas=" + encodeURIComponent(current.kelas) +
-      "&kodeMapel=" + encodeURIComponent(current.kode) +
-      "&mapel=" + encodeURIComponent(current.mapel) + "&_=" + Date.now();
+    var q = ["_=" + Date.now(), "action=absensi"];
+    if (current.kelas) q.push("kelas=" + encodeURIComponent(current.kelas));
+    if (current.kode)  q.push("kodeMapel=" + encodeURIComponent(current.kode));
+    if (current.mapel) q.push("mapel=" + encodeURIComponent(current.mapel));
 
-    fetch(url).then(function(r){ return r.json(); }).then(function(res){
+    fetch(API_URL + "?" + q.join("&")).then(function(r){ return r.json(); }).then(function(res){
       if (res.status !== "success"){
-        if (silent){ failed = true; }
-        else { setMsg(res.message || "Gagal memuat data.", true); current = null; }
+        if (silent || data){ failed = true; if (!silent) setMsg(res.message || "Gagal memuat data.", true); }
+        else setMsg(res.message || "Gagal memuat data.", true);
         return;
       }
       failed = false;
       lastTime = new Date().toLocaleTimeString("id-ID");
-      render(res, current.kelas.toUpperCase());
+      data = res;
+      buildFilters();
+      render();
     }).catch(function(err){
       if (silent){ failed = true; }
-      else { setMsg("Tidak dapat terhubung ke server: " + err.message, true); current = null; }
+      else setMsg("Tidak dapat terhubung ke server: " + err.message, true);
     }).then(function(){
       loading = false; btn.disabled = false; countdown = INTERVAL; updateBar();
     });
   }
 
+  // Filter tambahan: ambil ulang dari server
   f.addEventListener("submit", function(e){
     e.preventDefault();
-    var kelas = document.getElementById("kelas").value.trim();
-    var kode  = document.getElementById("kode").value.trim();
-    var mapel = document.getElementById("mapel").value.trim();
-    if (!kode && !mapel){ setMsg("Isi Kode Mapel atau Mata Pelajaran.", true); return; }
-    current = {kelas: kelas, kode: kode, mapel: mapel};
+    current = {
+      kelas: $("kelas").value.trim(),
+      kode:  $("kode").value.trim(),
+      mapel: $("mapel").value.trim()
+    };
     failed = false;
     load(false);
   });
 
   // Hitung mundur tiap detik; saat 0, muat ulang diam-diam
   setInterval(function(){
-    if (!current || loading || !auto.checked || document.hidden) return;
+    if (loading || !auto.checked || document.hidden) return;
     countdown--;
     if (countdown <= 0) load(true); else updateBar();
   }, 1000);
 
   auto.addEventListener("change", function(){ countdown = INTERVAL; updateBar(); });
 
-  // Saat tab kembali aktif dan data sudah lama, segarkan segera
   document.addEventListener("visibilitychange", function(){
-    if (!document.hidden && current && auto.checked && countdown <= 5) load(true);
+    if (!document.hidden && data && auto.checked && countdown <= 5) load(true);
+  });
+
+  /* ---------- Filter utama (Ruang & Tanggal) ---------- */
+  function buildFilters(){
+    var rs = {}, ts = {};
+    data.absensi.forEach(function(p){ rs[p.ruang || "(tanpa ruang)"] = true; });
+    (data.detail || []).forEach(function(d){ if (d.tanggal) ts[d.tanggal] = true; });
+
+    var rooms = Object.keys(rs).sort(function(a,b){ return a.localeCompare(b, "id", {numeric:true}); });
+    var dates = Object.keys(ts).sort().reverse();   // terbaru di atas
+
+    if (fRuang && !rs[fRuang]) fRuang = "";
+    if (fTgl && !ts[fTgl]) fTgl = "";
+
+    selRuang.innerHTML = '<option value="">Semua ruang</option>' + rooms.map(function(r){
+      return '<option value="' + esc(r) + '">Ruang ' + esc(r) + '</option>'; }).join("");
+    selTgl.innerHTML = '<option value="">Semua tanggal</option>' + dates.map(function(d){
+      return '<option value="' + esc(d) + '">' + esc(fmtTgl(d)) + '</option>'; }).join("");
+
+    selRuang.value = fRuang;  selTgl.value = fTgl;
+    selRuang.disabled = !rooms.length;
+    selTgl.disabled = !dates.length;
+  }
+
+  selRuang.addEventListener("change", function(){ fRuang = selRuang.value; if (data) render(); });
+  selTgl.addEventListener("change", function(){ fTgl = selTgl.value; if (data) render(); });
+  rst.addEventListener("click", function(){
+    fRuang = ""; fTgl = "";
+    selRuang.value = ""; selTgl.value = "";
+    $("kelas").value = ""; $("kode").value = ""; $("mapel").value = "";
+    var berubah = current.kelas || current.kode || current.mapel;
+    current = {kelas:"", kode:"", mapel:""};
+    if (berubah) load(false); else if (data) render();
   });
 
   function pct(a, b){ return b ? Math.round(a / b * 100) : 0; }
 
-  function render(res, kelas){
-    var done = {};
-    res.selesai.forEach(function(no){ done[no] = true; });
+  /* ---------- Tampilan ---------- */
+  function render(){
+    if (!data.absensi.length){
+      out.innerHTML = ""; bar.hidden = true;
+      setMsg(current.kelas
+        ? "Tidak ada peserta kelas " + current.kelas.toUpperCase() + " di sheet ABSENSI."
+        : "Tidak ada peserta di sheet ABSENSI.", true);
+      return;
+    }
+    setMsg(""); bar.hidden = false;
 
-    // Bandingkan ABSENSI dengan data pengerjaan, kelompokkan per ruang
-    var rooms = {};
-    var total = 0, sudah = 0;
-    res.absensi.forEach(function(p){
+    // No Peserta -> daftar pengiriman
+    var info = {};
+    (data.detail || []).forEach(function(d){ (info[d.noPeserta] = info[d.noPeserta] || []).push(d); });
+    var done = {};
+    data.selesai.forEach(function(no){ done[no] = true; });
+
+    // Terapkan filter ruang & tanggal, kelompokkan per ruang
+    var rooms = {}, total = 0, sudah = 0;
+    data.absensi.forEach(function(p){
       var key = p.ruang || "(tanpa ruang)";
+      if (fRuang && key !== fRuang) return;
+
+      var isDone = fTgl
+        ? (info[p.noPeserta] || []).some(function(d){ return d.tanggal === fTgl; })
+        : !!done[p.noPeserta];
+
       (rooms[key] = rooms[key] || {sudah:[], belum:[]});
-      if (done[p.noPeserta]) { rooms[key].sudah.push(p); sudah++; }
+      if (isDone){ rooms[key].sudah.push(p); sudah++; }
       else rooms[key].belum.push(p);
       total++;
     });
 
+    // Keterangan filter aktif
+    var ket = [];
+    if (current.kelas) ket.push("kelas " + current.kelas.toUpperCase());
+    if (current.kode)  ket.push("kode " + current.kode.toUpperCase());
+    if (current.mapel) ket.push("mapel " + current.mapel.toUpperCase());
+    var h = [];
+    h.push(ket.length ? "Filter tambahan: " + ket.join(", ") + "." : "Tanpa filter tambahan: semua kelas dan semua mata pelajaran.");
+    if (!current.kode && !current.mapel) h.push("“Sudah” berarti mengirim minimal satu mapel.");
+    if (fTgl) h.push("Pada tanggal " + fmtTgl(fTgl) + ", “Belum” berarti tidak mengirim pada tanggal itu.");
+    hint.textContent = h.join(" ");
+
     if (!total){
-      out.innerHTML = ""; bar.hidden = true;
-      setMsg("Tidak ada peserta kelas " + kelas + " di sheet ABSENSI.", true); return;
+      out.innerHTML = '<div class="kosong card">Tidak ada peserta yang sesuai filter.</div>';
+      return;
     }
-    setMsg(""); bar.hidden = false;
 
     var byName = function(a,b){ return a.nama.localeCompare(b.nama, "id"); };
-    var names = Object.keys(rooms).sort(function(a,b){
-      return a.localeCompare(b, "id", {numeric:true}); });
+    var names = Object.keys(rooms).sort(function(a,b){ return a.localeCompare(b, "id", {numeric:true}); });
+    var aktif = !!(fRuang || fTgl);
+    var judul = current.kelas ? "Peserta kelas " + esc(current.kelas.toUpperCase()) : "Peserta semua kelas";
 
     var html =
       '<div class="stats">' +
-        '<div class="stat"><small>Peserta kelas ' + esc(kelas) + '</small><b>' + total + '</b></div>' +
+        '<div class="stat"><small>' + judul + (aktif ? ' (terfilter)' : '') + '</small><b>' + total + '</b></div>' +
         '<div class="stat ok"><small>Sudah</small><b>' + sudah + '</b></div>' +
         '<div class="stat no"><small>Belum</small><b>' + (total - sudah) + '</b></div>' +
       '</div>' +
-      '<div class="overall"><div class="row"><span>Progres keseluruhan</span><span>' + pct(sudah,total) + '%</span></div>' +
+      '<div class="overall"><div class="row"><span>Progres' + (aktif ? ' (sesuai filter)' : ' keseluruhan') + '</span><span>' + pct(sudah,total) + '%</span></div>' +
       '<div class="meter"><i style="width:' + pct(sudah,total) + '%"></i></div></div>';
 
     names.forEach(function(n){
@@ -332,15 +466,18 @@
         '<span class="c">' + r.sudah.length + ' dari ' + t + ' selesai</span></div>' +
         '<div class="meter"><i style="width:' + pct(r.sudah.length,t) + '%"></i></div></div>' +
         '<div class="cols">' +
-        '<div class="col belum"><h3>Belum mengerjakan <em>' + r.belum.length + '</em></h3>' + list(r.belum) + '</div>' +
-        '<div class="col sudah"><h3>Sudah mengerjakan <em>' + r.sudah.length + '</em></h3>' + list(r.sudah) + '</div>' +
+        '<div class="col belum"><h3>Belum mengerjakan <em>' + r.belum.length + '</em></h3>' + list(r.belum, info, "belum") + '</div>' +
+        '<div class="col sudah"><h3>Sudah mengerjakan <em>' + r.sudah.length + '</em></h3>' + list(r.sudah, info, "sudah") + '</div>' +
         '</div></section>';
     });
 
-    var y = window.scrollY;      // jaga posisi gulir saat refresh
+    var y = window.scrollY;      // jaga posisi gulir saat refresh / ganti filter
     out.innerHTML = html;
     window.scrollTo(0, y);
   }
+
+  // Muat data langsung saat halaman dibuka (tanpa filter tambahan)
+  load(false);
 </script>
 </body>
 </html>
